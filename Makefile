@@ -1,5 +1,5 @@
 APPNAME = reveries
-VERSION = $(shell git describe --always --dirty 2>/dev/null || echo -n 'v0.1-git')
+VERSION = $(shell git describe --long --always --dirty 2>/dev/null || echo -n 'v0.1-git')
 PREFIX ?= /usr
 BINDIR ?= $(PREFIX)/bin
 BASHCOMPDIR ?= $(PREFIX)/share/bash-completion/completions
