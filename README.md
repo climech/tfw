@@ -25,7 +25,7 @@ Entries are GnuPG-encrypted text files stored in the `~/.reveries` directory. Ea
 **Note:** `reveries` is still in early stages — things may break. Backing up your entries is always a good idea.
 
 ```
-$ git clone github.com/toshjk/reveries
+$ git clone github.com/climech/reveries
 $ cd reveries/
 $ sudo make install
 ```
@@ -169,4 +169,4 @@ Displays program version.
 
 -------
 
-(c) Tosh J.K. \<tosh@toshjk.xyz\>
+© climech.org
