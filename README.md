@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/tfw.gif" height="200" />
+</p>
+
 # tfw — a simple GnuPG-encrypted personal journal
 
 `tfw` is a Bash utility for managing GnuPG-encrypted journal entries. It provides a simple, trustless and future-proof way of storing your private thoughts, ideas, memories, etc. It was inspired by [`pass`](https://www.passwordstore.org/).
