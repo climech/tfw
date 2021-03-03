@@ -1,1 +1,0 @@
-complete -W "new cat edit init list ls remove rm view version" reveries

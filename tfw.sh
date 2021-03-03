@@ -2,7 +2,7 @@
 
 set -o pipefail
 
-APP_NAME="reveries"
+APP_NAME=tfw
 VERSION=development # overwritten on install
 GPG="gpg"
 which gpg2 &>/dev/null && GPG="gpg2"
@@ -13,7 +13,7 @@ GPG_OPTS=( $GESTALT_GPG_OPTS "--quiet" "--yes" "--compress-algo=none" "--no-encr
 # Check which variant of `date` is present on the system.
 date --version >/dev/null 2>&1 && DATE_VARIANT="GNU" || DATE_VARIANT="BSD"
 
-DIR="$HOME/.reveries"
+DIR="$HOME/.$APP_NAME"
 DATE_FORMAT="%c"
 
 #
@@ -483,7 +483,7 @@ cmd_version() {
 cmd_help() {
 	[[ "$#" -ne 0 ]] && die "Usage: $APP_NAME help|-h|--help"
 	cat <<-HELPDOC
-		Usage: reveries <command> [<args>]
+		Usage: tfw <command> [<args>]
 
 		Commands:
 
