@@ -13,7 +13,8 @@ GPG_OPTS=( $GESTALT_GPG_OPTS "--quiet" "--yes" "--compress-algo=none" "--no-encr
 # Check which variant of `date` is present on the system.
 date --version >/dev/null 2>&1 && DATE_VARIANT="GNU" || DATE_VARIANT="BSD"
 
-DIR="$HOME/.$APP_NAME"
+CONFIG_DIR="$HOME/.config/$APP_NAME"
+ENTRY_DIR="$CONFIG_DIR/entries"
 DATE_FORMAT="%c"
 
 #
@@ -120,7 +121,7 @@ printf_cyan() {
 #
 
 load_recipient_id() {
-	local filename="$DIR/.gpg-id"
+	local filename="$CONFIG_DIR/.gpg-id"
 	RECIPIENT="$(cat 2>/dev/null <"$filename")" ||
 		die "GPG key is not set. Run \`init\` to initialize the program."
 }
@@ -139,7 +140,7 @@ load_entry_list() {
 	DATES=()
 	local all extended
 
-	all="$(ls -1 "$DIR" 2>/dev/null)"
+	all="$(ls -1 "$ENTRY_DIR" 2>/dev/null)"
 	[ -z "$all" ] && return 0
 
 	mapfile -t FILENAMES < <(printf "$all" | awk "/^${RE_FILENAME}$/")
@@ -305,7 +306,7 @@ reencrypt_file() {
 reencrypt_all() {
 	local gpgid="$1"
 	for f in "${FILENAMES[@]}"; do
-		if ! reencrypt_file "$DIR/$f" "$gpgid"; then
+		if ! reencrypt_file "$ENTRY_DIR/$f" "$gpgid"; then
 			log "Couldn't re-encrypt file: $f"
 			return 1
 		fi
@@ -339,14 +340,15 @@ cmd_init() {
 	load_entry_list
 	local gpgid="$1"
 	local errmsg="Couldn't initialize $APP_NAME"
-	if [ ! -d "$DIR" ]; then
-		mkdir "$DIR" && log "Created directory: '$DIR'." || die "$errmsg."
+	if [ ! -d "$CONFIG_DIR" ]; then
+		mkdir "$CONFIG_DIR" && log "Created directory: '$CONFIG_DIR'." || die "$errmsg."
+		mkdir "$ENTRY_DIR" && log "Created directory: '$ENTRY_DIR'." || die "$errmsg."
 	fi
 	# Check if key exists.
 	"$GPG" "${GPG_OPTS[@]}" --list-keys "$gpgid" > /dev/null 2>&1 ||
 		die "$errmsg: key '$gpgid' does not exist."
 	# Save id.
-	echo "$gpgid" > "$DIR/.gpg-id" || die "$errmsg."
+	echo "$gpgid" > "$CONFIG_DIR/.gpg-id" || die "$errmsg."
 	# Re-encrypt existing entries.
 	reencrypt_all "$gpgid" || die "$errmsg."
 	log "$APP_NAME successfully initialized for $gpgid."
@@ -361,7 +363,7 @@ cmd_new() {
 	# Encrypt & save if file exists.
 	if [[ -f "$tmpdir/$filename" ]]; then
 		cat "$tmpdir/$filename" |
-			"$GPG" -o "$DIR/$filename" "${GPG_OPTS[@]}" -er "$RECIPIENT"
+			"$GPG" -o "$ENTRY_DIR/$filename" "${GPG_OPTS[@]}" -er "$RECIPIENT"
 	else 
 		log "Nothing to encrypt, aborting..."
 	fi
@@ -378,9 +380,9 @@ cmd_edit() {
 	local i="${SELECTION[0]}"
 	local filename="${FILENAMES[$i]}"
 	local tmpdir="$(new_tmpdir)" || die
-	$GPG -o "$tmpdir/$filename" --yes --quiet -d "$DIR/$filename" || die
+	$GPG -o "$tmpdir/$filename" --yes --quiet -d "$ENTRY_DIR/$filename" || die
 	edit_file "$tmpdir/$filename" || die
-	cat "$tmpdir/$filename" | $GPG -o "$DIR/$filename" --yes -er "$RECIPIENT"
+	cat "$tmpdir/$filename" | $GPG -o "$ENTRY_DIR/$filename" --yes -er "$RECIPIENT"
 	rm_tmpdir "$tmpdir"
 }
 
@@ -403,7 +405,7 @@ cmd_cat() {
 	[[ "${#SELECTION[@]}" -eq 0 ]] && die "No entries selected."
 	local body
 	for i in "${SELECTION[@]}"; do
-		body="$(decrypt_file "$DIR/${FILENAMES[$i]}")" || die
+		body="$(decrypt_file "$ENTRY_DIR/${FILENAMES[$i]}")" || die
 		print_header "$(date -d @"${EPOCHS[$i]}" +"$DATE_FORMAT")"
 		printf "$body\n\n"
 	done
@@ -439,7 +441,7 @@ cmd_remove() {
 	fi
 
 	for i in "${SELECTION[@]}"; do
-		rm -f "$DIR/${FILENAMES[$i]}"
+		rm -f "$ENTRY_DIR/${FILENAMES[$i]}"
 	done
 }
 
@@ -467,7 +469,7 @@ cmd_grep() {
 	local width=$(tput cols)
 	[[ $width -gt 80 ]] && width=80
 	for i in "${SELECTION[@]}"; do
-		grep_results="$(decrypt_file "$DIR/${FILENAMES[$i]}" | \
+		grep_results="$(decrypt_file "$ENTRY_DIR/${FILENAMES[$i]}" | \
 			fold -sw $width | \
 			grep --color=always "${grep_args[@]}" -)" || die
 		printf_cyan $(($i + 1))": ${DATES[$i]}:\n"
