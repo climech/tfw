@@ -3,7 +3,7 @@
 set -o pipefail
 
 APP_NAME="reveries"
-VERSION= # overwritten on install
+VERSION=development # overwritten on install
 GPG="gpg"
 which gpg2 &>/dev/null && GPG="gpg2"
 export GPG_TTY="${GPG_TTY:-$(tty 2>/dev/null)}"
