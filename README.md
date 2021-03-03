@@ -1,38 +1,44 @@
 <p align="center">
   <img src="docs/assets/tfw.gif" height="200" />
 </p>
+<p align="center"><em>“Trust nobody, not even yourself”</em></p>
+<p align="center"><em>—a wise man</em></p>
 
-# tfw — a simple GnuPG-encrypted personal journal
+# tfw
 
-`tfw` is a Bash utility for managing GnuPG-encrypted journal entries. It provides a simple, trustless and future-proof way of storing your private thoughts, ideas, memories, etc. It was inspired by [`pass`](https://www.passwordstore.org/).
+`tfw` is a command-line tool that manages a collection of timestamped, `gpg`-encrypted journal entries. It provides a simple, trustless and future-proof way of storing your private thoughts, ideas, memories, etc.
+
+The way it works was largely inspired by [`pass`](https://www.passwordstore.org/)—a simple password manager that adheres to the [Unix philosophy](https://en.wikipedia.org/wiki/Unix_philosophy).
 
 ## How it works
 
-Entries are GnuPG-encrypted text files stored in the `~/.tfw` directory. Each file is timestamped with [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)-formatted dates. Encryption and decryption happens on the fly where possible, otherwise the script makes use of [tmpfs](https://en.wikipedia.org/wiki/Tmpfs) to prevent temporary files from ever touching persistent storage. On systems where tmpfs is not available (notably macOS), the files will be [`shred`](https://en.wikipedia.org/wiki/Shred_(Unix))ded before deletion. A number of useful subcommands is provided for common tasks such as listing, viewing, editing, grepping, etc., combined with powerful selectors and filters.
+The entries are [`gpg`](https://gnupg.org/)-encrypted plain text files stored in `~/.config/tfw/entries`. Each file has a name that follows the [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) date format. Encryption and decryption happens on the fly where possible, otherwise the script makes use of [tmpfs](https://en.wikipedia.org/wiki/Tmpfs) to prevent unencrypted secrets from ever touching persistent storage. On macOS, where tmpfs is not available, temporary files are [shredded](https://en.wikipedia.org/wiki/Shred_(Unix)) before deletion.
+
+A number of useful subcommands is provided for common tasks such as listing, viewing, editing, grepping, etc., combined with powerful selectors and filters.
 
 ## Dependencies
 
-* [gpg2](https://gnupg.org/)
+The script depends on [GnuPG](https://gnupg.org/) for encryption.
 
 ## Installation
 
-**Note:** `tfw` is still in early stages — things may break. Backing up your entries is always a good idea.
+Get the latest release, change into the directory, and run:
 
 ```
-$ git clone github.com/climech/tfw
-$ cd tfw/
-$ sudo make install
+$ make && sudo make install
 ```
+
+The `make` command is used to insert the current version into the script; `make install` also installs Bash completion.
 
 ## Usage
 
 ### Selectors
 
-Most of the commands expect a selector. Entries can be selected using index selectors, date selectors and ranges.
+Most of `tfw` commands expect a selector. Entries can be selected using index selectors, date selectors and index/date ranges.
 
 #### Index selectors
 
-Index selectors select entries based on their current position on the list, with 1 being the oldest. Negative indices can be used to count from the end of the list. For example, to list the latest entry:
+Index selectors work on a list of entries ordered chronologically. Index `1` selects the oldest entry available. Negative indices may be used to count from the end of the list, e.g. to list the most recent entry:
 
 ```
 $ tfw ls -1
@@ -40,7 +46,7 @@ $ tfw ls -1
 Tue 14 Jul 2020 07:43:27 PM CEST (42)
 ```
 
-Multiple selectors may be used:
+Multiple selectors work too:
 
 ```
 $ tfw ls 1 4 -1
@@ -52,7 +58,7 @@ Tue 14 Jul 2020 07:43:27 PM CEST (42)
 
 #### Date selectors
 
-A date selector is a string following the format `YYYY-MM-DD`. It selects all entries created on the given date.
+A date selector is a string that follows the format `YYYY-MM-DD`. It selects all entries created on the specified date.
 
 ```
 $ tfw ls 2019-12-31
@@ -63,7 +69,7 @@ Tue 31 Dec 2019 03:44:01 PM CEST (2)
 
 #### Ranges
 
-Multiple entries may be selected by providing a range:
+Multiple entries may be selected by specifying a range:
 
 ```
 $ tfw ls 1:4
@@ -80,7 +86,7 @@ Fri 3 Jan 2020 09:13:49 PM CEST (4)
 ...
 ```
 
-All ranges are inclusive. Either boundary may be omitted, creating an unbounded range in that direction. Omitting both parts (`:`) selects all entries.
+Either boundary may be omitted, creating an unbounded range in either direction. Omitting both parts (`:`) selects all entries.
 
 ### Filters
 
@@ -90,7 +96,7 @@ All ranges are inclusive. Either boundary may be omitted, creating an unbounded 
 
 #### init \<gpg-id\>
 
-Initializes the program by setting the GPG key. Existing entries are re-encrypted using the new key.
+Initializes the program by setting the GPG key. Any existing entries are re-encrypted using the new key.
 
 ```
 $ tfw init "John Doe"
@@ -98,12 +104,11 @@ $ tfw init "John Doe"
 
 #### new
 
-Opens the `$EDITOR`. A new entry is created on exit, if the file was saved. `new` runs implicitly when no command is given.
+Opens the `$EDITOR`. A new entry is created on save. The `new` command is invoked implicitly when no command is given.
 
 #### list|ls [\<selector\>...]
 
-Prints out a list of selected entries. It selects all entries when no
-selector is given.
+Prints out a list of selected entries. If no selector is given, all entries are selected.
 
 ```
 $ tfw ls
@@ -115,15 +120,13 @@ Tue 31 Dec 2019 03:44:01 PM CEST (2)
 
 #### cat \<selector\>...
 
-Decrypts selected entries and print them out.
+Decrypts and prints out selected entries.
 
 #### view \<selector\>...
 
-Decrypts the selected entries, concatenates and pipes them into `less`. The entries are word-wrapped to fit the current terminal width (capped at 80 characters). Each entry begins with a header showing the creation time.
+Decrypts the entries and pipes them into `less` for reading.
 
-```
-$ tfw view 2
-```
+The entries are concatenated and wrapped to fit the current terminal width, capped at 80 characters. Each entry begins with a header showing the creation time.
 
 #### edit \<index\>
 
@@ -145,6 +148,8 @@ ante elementum [dolor], quis faucibus tortor risus vel sem. Aliquam varius
 
 Deletes the selected entries. Prompts for confirmation when attempting to delete multiple entries.
 
+**NOTE:** the indices are not IDs! If you remove an entry from the middle of the list, the next one will take its place. When in doubt, run `ls` again before removing any more entries.
+
 #### help
 
 Displays helpful information.
@@ -161,6 +166,6 @@ Displays program version.
 * Add filters (`year:2020`, `weekday:friday`, etc., applied to current selection);
 * Add optional flags to some subcommands.
 
--------
+## License
 
-© climech.org
+This project is released under the [MIT license](https://en.wikipedia.org/wiki/MIT_License).
