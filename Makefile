@@ -4,14 +4,17 @@ PREFIX ?= /usr
 BINDIR ?= $(PREFIX)/bin
 BASHCOMPDIR ?= $(PREFIX)/share/bash-completion/completions
 
-all:
-	@echo "$(APPNAME) is a shell script, no need for compiling. Try \`make install\` instead."
+all: build
+
+build: $(APPNAME)
+	
+$(APPNAME): $(APPNAME).sh
+	@sed 's/^VERSION=.*$$/VERSION=$(VERSION)/' $(APPNAME).sh > $(APPNAME)
 
 install-completion:
 	@install -v -d "$(DESTDIR)$(BASHCOMPDIR)" && install -m 0644 -v completion/$(APPNAME).bash-completion "$(DESTDIR)$(BASHCOMPDIR)/$(APPNAME)"
 
-install: install-completion
-	@sed 's/^VERSION=.*$$/VERSION=$(VERSION)/' $(APPNAME).sh > $(APPNAME)
+install: build install-completion
 	@install -v -d "$(DESTDIR)$(BINDIR)/" && install -m 0755 -v $(APPNAME) "$(DESTDIR)$(BINDIR)/$(APPNAME)"
 
 uninstall:
@@ -22,4 +25,4 @@ uninstall:
 clean:
 	@rm -rf $(APPNAME)
 
-.PHONY: install install-completion uninstall clean
+.PHONY: install-completion clean uninstall
