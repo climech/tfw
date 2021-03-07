@@ -427,7 +427,7 @@ cmd_cat() {
 	local body
 	for i in "${SELECTION[@]}"; do
 		body="$(decrypt_file "$ENTRY_DIR/${FILENAMES[$i]}")" || die
-		print_header "$(date -d @"${EPOCHS[$i]}" +"$DATE_FORMAT")"
+		print_header "${DATES[$i]}"
 		printf "$body\n\n"
 	done
 }
