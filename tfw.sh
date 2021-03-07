@@ -36,48 +36,54 @@ yesno() {
 	[ "$response" == "Y" ]
 }
 
-# iso8601_extended_to_basic() converts date string from "extended" to "basic"
-# format, more suited for filenames (no illegal chars).
-iso8601_extended_to_basic() {
-	sed 's/-//g' | sed 's/://g' | sed 's/ /T/'
+# Get current time in ISO 8601 basic format, e.g. "20210307T021732+0100".
+get_current_iso8601_basic() {
+	date +"%Y%m%dT%H%M%S%z"
 }
 
-# iso8601_basic_to_extended() converts date string from "basic" to
-# "extended" format, recognized by the `date` command.
 iso8601_basic_to_extended() {
-	sed 's/^\([0-9]\+\)\([0-9]\{2\}\)\([0-9]\{2\}\)T\([0-9\]\{2\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)\([+\-][0-9]\{2\}\)\([0-9]\{2\}\)$/\1-\2-\3T\4:\5:\6\7:\8/g'
+	# GNU/date doesn't provide a way to specify the input format, but we can use
+	# some trickery to achieve the same effect. It even works for arbitrary-length
+	# years!
+	rev |
+		awk 'BEGIN { OFS = ":" } ; {
+			print substr($1,1,2), substr($1,3,5), substr($1,8,2), substr($1,10)
+		}' |
+		awk 'BEGIN { OFS = "-" } ; {
+			print substr ($1,1,17), substr($1,18,2), substr($1,20)
+		}' |
+		rev
 }
 
 iso8601_extended_to_epoch() {
 	if [[ $DATE_VARIANT == "GNU" ]]; then
 		date -d "$(cat -)" +"%s"
 	else
-		# TODO
-		date -j -f "%F" "$(cat -)" +"%s" # untested
+		# Remove ':' from UTC offset for '%z' to work.
+		rev | sed 's/://' | rev | date -jf '%Y-%m-%dT%H:%M:%S%z' "$(cat -)" +"%s"
 	fi
 }
 
-epoch_to_iso8601_extended() {
-	# TODO: make it work for BSD date.
-	date -d "@$(cat -)" --iso-8601=seconds
-}
-
-# date_to_epoch() converts a date in the format "YYYY-MM-DD" to Unix seconds.
+# Convert a date in the format "YYYY-MM-DD" to seconds since Unix Epoch.
 date_to_epoch() {
 	if [[ $DATE_VARIANT == "GNU" ]]; then
 		date -d "$(cat -)" +"%s"
 	else
-		date -j -f "%F" "$(cat -)" +"%s"
+		date -jf "%F" "$(cat -)" +"%s"
 	fi
 }
 
-epoch_to_display_date() {
-	date -d "@$(cat -)" +"$DATE_FORMAT"
+epoch_to_user_date() {
+	if [[ $DATE_VARIANT == "GNU" ]]; then
+		date -d "@$(cat -)" +"$DATE_FORMAT"
+	else
+		date -jf "%F" "$(cat -)" +"$DATE_FORMAT"
+	fi
 }
 
 new_filename() {
-	# TODO: make it work for BSD date.
-	echo -n "$(date --iso-8601=seconds | iso8601_extended_to_basic).gpg"
+	# The basic format can be safely used for filenames (no illegal characters).
+	get_current_iso8601_basic | sed 's/$/.gpg/'
 }
 
 # new_tmpdir() creates a new directory in /dev/shm (or /tmp, if tmpfs is not
@@ -86,7 +92,7 @@ new_tmpdir() {
   if [[ -d /dev/shm && -w /dev/shm && -x /dev/shm ]]; then
     mktemp -d -p /dev/shm
   else
-	mktemp -d
+		mktemp -d
   fi
 }
 
@@ -148,15 +154,16 @@ load_entry_list() {
 	mapfile -t extended < <(for f in "${FILENAMES[@]}"; do \
 		echo "$f" |
 		sed 's/\.gpg$//' |
-		iso8601_basic_to_extended; done)
-
-#	[[ "${#extended[@]}" -ne "${#FILENAMES[@]}" ]] && die
-
-	mapfile -t DATES < <(for e in "${extended[@]}"; do \
-		date -d "$e" "+$DATE_FORMAT"; done)
+		iso8601_basic_to_extended; \
+	done)
 
 	mapfile -t EPOCHS < <(for e in "${extended[@]}"; do \
-		printf "$e" | iso8601_extended_to_epoch; done)
+		printf "$e" | iso8601_extended_to_epoch; \
+	done)
+
+	mapfile -t DATES < <(for e in "${EPOCHS[@]}"; do \
+		printf "$e" | epoch_to_user_date; \
+	done)
 }
 
 #
