@@ -43,7 +43,7 @@ Index selectors work on a list of entries ordered chronologically. Index `1` sel
 ```
 $ tfw ls -1
 
-Tue 14 Jul 2020 07:43:27 PM CEST (42)
+42. Tue 14 Jul 2020 07:43:27 PM CEST
 ```
 
 Multiple selectors work too:
@@ -51,9 +51,9 @@ Multiple selectors work too:
 ```
 $ tfw ls 1 4 -1
 
-Tue 31 Dec 2019 03:12:22 PM CEST (1)
-Fri 3 Jan 2020 09:13:49 PM CEST (4)
-Tue 14 Jul 2020 07:43:27 PM CEST (42)
+1.  Tue 31 Dec 2019 03:12:22 PM CEST
+4.  Fri  3 Jan 2020 09:13:49 PM CEST
+42. Tue 14 Jul 2020 07:43:27 PM CEST
 ```
 
 #### Date selectors
@@ -63,8 +63,8 @@ A date selector is a string that follows the format `YYYY-MM-DD`. It selects all
 ```
 $ tfw ls 2019-12-31
 
-Tue 31 Dec 2019 03:12:22 PM CEST (1)
-Tue 31 Dec 2019 03:44:01 PM CEST (2)
+1. Tue 31 Dec 2019 03:12:22 PM CEST
+2. Tue 31 Dec 2019 03:44:01 PM CEST
 ```
 
 #### Ranges
@@ -74,15 +74,15 @@ Multiple entries may be selected by specifying a range:
 ```
 $ tfw ls 1:4
 
-Tue 31 Dec 2019 03:12:22 PM CEST (1)
-Tue 31 Dec 2019 03:44:01 PM CEST (2)
-Thu 2 Jan 2020 02:02:58 PM CEST (3)
-Fri 3 Jan 2020 09:13:49 PM CEST (4)
+1. Tue 31 Dec 2019 03:12:22 PM CEST
+2. Tue 31 Dec 2019 03:44:01 PM CEST
+3. Thu  2 Jan 2020 02:02:58 PM CEST
+4. Fri  3 Jan 2020 09:13:49 PM CEST
 
 $ tfw ls 2020-01-01:2020-02-01
 
-Thu 2 Jan 2020 02:02:58 PM CEST (3)
-Fri 3 Jan 2020 09:13:49 PM CEST (4)
+3. Thu  2 Jan 2020 02:02:58 PM CEST
+4. Fri  3 Jan 2020 09:13:49 PM CEST
 ...
 ```
 
@@ -113,8 +113,8 @@ Prints out a list of selected entries. If no selector is given, all entries are 
 ```
 $ tfw ls
 
-Tue 31 Dec 2019 08:12:22 PM CEST (1)
-Tue 31 Dec 2019 03:44:01 PM CEST (2)
+1. Tue 31 Dec 2019 08:12:22 PM CEST
+2. Tue 31 Dec 2019 03:44:01 PM CEST
 ...
 ```
 
@@ -139,7 +139,7 @@ Decrypts the selected entries and pipes them into `grep`. If no selector is give
 ```
 $ tfw grep -i dolor 1
 
-Tue 31 Dec 2019 03:12:22 PM CEST (1):
+1. Tue 31 Dec 2019 03:12:22 PM CEST
 Lorem ipsum [dolor] sit amet, consectetur adipiscing elit. Proin et ligula orci.
 ante elementum [dolor], quis faucibus tortor risus vel sem. Aliquam varius
 ```
