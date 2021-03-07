@@ -347,10 +347,8 @@ cmd_init() {
 	load_entry_list
 	local gpgid="$1"
 	local errmsg="Couldn't initialize $APP_NAME"
-	if [ ! -d "$CONFIG_DIR" ]; then
-		mkdir "$CONFIG_DIR" && log "Created directory: '$CONFIG_DIR'." || die "$errmsg."
-		mkdir "$ENTRY_DIR" && log "Created directory: '$ENTRY_DIR'." || die "$errmsg."
-	fi
+	# Ensure directories exist.
+	mkdir -p "$ENTRY_DIR" || die "$errmsg."
 	# Check if key exists.
 	"$GPG" "${GPG_OPTS[@]}" --list-keys "$gpgid" > /dev/null 2>&1 ||
 		die "$errmsg: key '$gpgid' does not exist."
