@@ -77,7 +77,7 @@ epoch_to_user_date() {
 	if [[ $DATE_VARIANT == "GNU" ]]; then
 		date -d "@$(cat -)" +"$DATE_FORMAT"
 	else
-		date -jf "%F" "$(cat -)" +"$DATE_FORMAT"
+		date -jf "%s" "$(cat -)" +"$DATE_FORMAT"
 	fi
 }
 
