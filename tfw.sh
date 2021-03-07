@@ -86,20 +86,42 @@ new_filename() {
 	get_current_iso8601_basic | sed 's/$/.gpg/'
 }
 
-# new_tmpdir() creates a new directory in /dev/shm (or /tmp, if tmpfs is not
-# available) and prints its path.
+# Create a new directory in /dev/shm and set TMPDIR to its path. If /dev/shm is
+# not available, use /tmp and shred the files on script exit.
 new_tmpdir() {
-  if [[ -d /dev/shm && -w /dev/shm && -x /dev/shm ]]; then
-    mktemp -d -p /dev/shm
-  else
-		mktemp -d
-  fi
-}
+	local template="$APP_NAME.XXXXXXXXXXXXX"
 
-# rm_tmpdir() removes the directory safely, shredding the contents if dir
-# is not in /dev/shm/.
-rm_tmpdir() {
-	[[ "$1" =~ ^/dev/shm/ ]] && rm -rf "$1" || shred -ufn 5 "$1"/*
+  if [[ -d /dev/shm && -w /dev/shm && -x /dev/shm ]]; then
+    TMPDIR="$(mktemp -d "/dev/shm/$template")"
+		trap "rm -rf $TMPDIR" EXIT
+  else
+    TMPDIR="$(mktemp -d "/tmp/$template")"
+
+		if ! rm --version &> /dev/null; then
+			remove_tmpdir() (
+				# BSD/rm includes a `-P` option which is similar to shred.
+				shopt -s nullglob
+				for f in "$TMPDIR"/*; do
+					rm -fP "$f"
+				done
+				rm -rf "$TMPDIR"
+			)
+			trap remove_tmpdir EXIT
+		elif command -v shred &> /dev/null; then
+			remove_tmpdir() (
+				shopt -s nullglob
+				for f in "$TMPDIR"/*; do
+					shred -ufn 5 "$f"
+				done
+				rm -rf "$TMPDIR"
+			)
+			trap remove_tmpdir EXIT
+		else
+			log "Neither '/dev/shm' nor 'shred' was found on the system."
+			log "Please install 'shred' and try again."
+			return 1
+		fi
+  fi
 }
 
 printf_repeat() {
@@ -298,16 +320,15 @@ select_by_date_range() {
 reencrypt_file() {
 	local filepath="$1"
 	local gpgid="$2"
-	local filename tmpdir
+	local filename
 	filename="$(basename "$filepath")" || return 1
-	tmpdir="$(new_tmpdir)" || return 1
+	new_tmpdir || return 1
 
 	cat "$filepath" |
 		"$GPG" -d "${GPG_OPTS[@]}" |
-		"$GPG" -o "$tmpdir/$filename" "${GPG_OPTS[@]}" -er "$gpgid" || return 1
+		"$GPG" -o "$TMPDIR/$filename" "${GPG_OPTS[@]}" -er "$gpgid" || return 1
 
-	cat "$tmpdir/$filename" > "$filepath" || return 1
-	rm_tmpdir "$tmpdir"
+	cat "$TMPDIR/$filename" > "$filepath" || return 1
 }
 
 reencrypt_all() {
@@ -361,18 +382,17 @@ cmd_init() {
 
 cmd_new() {
 	load_recipient_id
-	local tmpdir filename
-	tmpdir="$(new_tmpdir)" || die
+	local filename
+	new_tmpdir || die
 	filename="$(new_filename)"
-	edit_file "$tmpdir/$filename"
+	edit_file "$TMPDIR/$filename"
 	# Encrypt & save if file exists.
-	if [[ -f "$tmpdir/$filename" ]]; then
-		cat "$tmpdir/$filename" |
+	if [[ -f "$TMPDIR/$filename" ]]; then
+		cat "$TMPDIR/$filename" |
 			"$GPG" -o "$ENTRY_DIR/$filename" "${GPG_OPTS[@]}" -er "$RECIPIENT"
 	else 
 		log "Nothing to encrypt, aborting..."
 	fi
-	rm_tmpdir "$tmpdir"
 }
 
 cmd_edit() {
@@ -384,11 +404,10 @@ cmd_edit() {
 	[[ "${#SELECTION[@]}" -ne 1 ]] && die "Index out of range."
 	local i="${SELECTION[0]}"
 	local filename="${FILENAMES[$i]}"
-	local tmpdir="$(new_tmpdir)" || die
-	$GPG -o "$tmpdir/$filename" --yes --quiet -d "$ENTRY_DIR/$filename" || die
-	edit_file "$tmpdir/$filename" || die
-	cat "$tmpdir/$filename" | $GPG -o "$ENTRY_DIR/$filename" --yes -er "$RECIPIENT"
-	rm_tmpdir "$tmpdir"
+	new_tmpdir || die
+	$GPG -o "$TMPDIR/$filename" --yes --quiet -d "$ENTRY_DIR/$filename" || die
+	edit_file "$TMPDIR/$filename" || die
+	cat "$TMPDIR/$filename" | $GPG -o "$ENTRY_DIR/$filename" --yes -er "$RECIPIENT"
 }
 
 cmd_list() {
