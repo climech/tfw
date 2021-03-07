@@ -12,7 +12,7 @@ The way it works was largely inspired by [`pass`](https://www.passwordstore.org/
 
 ## How it works
 
-The entries are [`gpg`](https://gnupg.org/)-encrypted plain text files stored in `~/.config/tfw/entries`. Each file has a name that follows the [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) date format. Encryption and decryption happens on the fly where possible, otherwise the script makes use of [tmpfs](https://en.wikipedia.org/wiki/Tmpfs) to prevent unencrypted secrets from ever touching persistent storage. On macOS, where tmpfs is not available, temporary files are [shredded](https://en.wikipedia.org/wiki/Shred_(Unix)) before deletion.
+The entries are [`gpg`](https://gnupg.org/)-encrypted plain text files stored in `~/.config/tfw/entries`. Each file has a name that follows the [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) date format. Encryption and decryption happens on the fly where possible, otherwise the script makes use of [tmpfs](https://en.wikipedia.org/wiki/Tmpfs) to prevent unencrypted secrets from ever touching persistent storage. On systems where tmpfs is not available, `tfw` will try to [shred](https://en.wikipedia.org/wiki/Shred_(Unix)) temporary files before deletion (read about its limitations [here](https://en.wikipedia.org/wiki/Shred_(Unix)#Limitations)).
 
 A number of useful subcommands is provided for common tasks such as listing, viewing, editing, grepping, etc., combined with powerful selectors and filters.
 
