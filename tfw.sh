@@ -156,27 +156,24 @@ load_recipient_id() {
 
 RE_FILENAME='([0-9]+)([0-9]{2})([0-9]{2})T([0-9]{2})([0-9]{2})([0-9]{2})([+\-])([0-9]{2})([0-9]{2})\.gpg'
 
-# load_entry_list() fills the arrays with entry information:
-#
-#   FILENAMES -- base names of the files;
-#   EPOCHS    -- unix timestamps, for numeric comparison;
-#   DATES     -- formatted dates, as displayed to the user.
-#
-load_entry_list() {
+# Load the base names of the entry files.
+load_entry_filenames() {
 	FILENAMES=()
-	EPOCHS=()
-	DATES=()
-	local all extended
+	shopt -s nullglob
+	for f in "$ENTRY_DIR"/*; do
+		if [[ -f "$f" && "$f" =~ ${RE_FILENAME}$ ]]; then
+			FILENAMES+=("${BASH_REMATCH[0]}")
+		fi
+	done
+}
 
-	all="$(ls -1 "$ENTRY_DIR" 2>/dev/null)"
-	[ -z "$all" ] && return 0
-
-	mapfile -t FILENAMES < <(printf "$all" | awk "/^${RE_FILENAME}$/")
+# Fill the arrays: FILENAMES, EPOCHS, DATES.
+load_entries() {
+	local extended
+	load_entry_filenames
 
 	mapfile -t extended < <(for f in "${FILENAMES[@]}"; do \
-		echo "$f" |
-		sed 's/\.gpg$//' |
-		iso8601_basic_to_extended; \
+		echo "$f" | sed 's/\.gpg$//' | iso8601_basic_to_extended; \
 	done)
 
 	mapfile -t EPOCHS < <(for e in "${extended[@]}"; do \
@@ -365,7 +362,7 @@ print_header() {
 # cmd_init() sets the receiver key and re-encrypts existing files.
 cmd_init() {
 	[[ "$#" -ne 1 ]] && die "Usage: $APP_NAME <gpg-id>"
-	load_entry_list
+	load_entries
 	local gpgid="$1"
 	local errmsg="Couldn't initialize $APP_NAME"
 	# Ensure directories exist.
@@ -399,7 +396,7 @@ cmd_edit() {
 	[[ "$#" -ne 1 ]] && die "Usage: $app_name edit <index>"
 	! is_valid_index "$1" && die "index must be an integer"
 	load_recipient_id
-	load_entry_list
+	load_entries
 	select_by_index "$1"
 	[[ "${#SELECTION[@]}" -ne 1 ]] && die "Index out of range."
 	local i="${SELECTION[0]}"
@@ -411,7 +408,7 @@ cmd_edit() {
 }
 
 cmd_list() {
-	load_entry_list
+	load_entries
 	local selectors
 	[[ "$#" -gt 0 ]] && selectors=("$@") || selectors=(":")
 	sel "${selectors[@]}"
@@ -424,7 +421,7 @@ cmd_list() {
 
 cmd_cat() {
 	[[ "$#" -eq 0 ]] && die "Usage: $APP_NAME cat <selector>..."
-	load_entry_list
+	load_entries
 	sel "$@"
 	[[ "${#SELECTION[@]}" -eq 0 ]] && die "No entries selected."
 	local body
@@ -449,7 +446,7 @@ cmd_view() {
 cmd_remove() {
 	[[ "$#" -eq 0 ]] && die "Usage: $APP_NAME remove|rm <selector>..."
 
-	load_entry_list
+	load_entries
 	sel "$@"
 	local count="${#SELECTION[@]}"
 	[[ $count -eq 0 ]] && die "No entries selected."
@@ -471,7 +468,7 @@ cmd_remove() {
 
 cmd_grep() {
 	[[ "$#" -eq 0 ]] && die "Usage: $APP_NAME grep <grep-args> [<selector>...]"
-	load_entry_list
+	load_entries
 
 	# Isolate selectors by starting from the end of args and backing up as
 	# long as the current arg looks like a selector.
