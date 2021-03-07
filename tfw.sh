@@ -480,21 +480,27 @@ cmd_grep() {
 	done
 	local grep_args=("${args[@]:0:$sel_start}")
 	local sel_args=("${args[@]:$sel_start}")
+
 	# Select all, if no selectors.
 	if [[ ${#sel_args[@]} -eq 0 ]]; then
 		sel_args+=(":")
 	fi
+
 	sel "${sel_args[@]}"
 
 	local grep_results
 	local width=$(tput cols)
 	[[ $width -gt 80 ]] && width=80
 	for i in "${SELECTION[@]}"; do
-		grep_results="$(decrypt_file "$ENTRY_DIR/${FILENAMES[$i]}" | \
+		grep_results="$( \
+			decrypt_file "$ENTRY_DIR/${FILENAMES[$i]}" | \
 			fold -sw $width | \
-			grep --color=always "${grep_args[@]}" -)" || die
-		printf_cyan $(($i + 1))": ${DATES[$i]}:\n"
-		echo "$grep_results"
+			grep --color=always "${grep_args[@]}" -)"
+
+		if [ ! -z "$grep_results" ]; then
+			printf_cyan $(($i + 1))": ${DATES[$i]}:\n"
+			echo "$grep_results"
+		fi
 	done
 }
 
