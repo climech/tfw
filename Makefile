@@ -10,6 +10,7 @@ build: $(APPNAME)
 	
 $(APPNAME): $(APPNAME).sh
 	@sed 's/^VERSION=.*$$/VERSION=$(VERSION)/' $(APPNAME).sh > $(APPNAME)
+	@chmod +x $(APPNAME)
 
 install-completion:
 	@install -v -d "$(DESTDIR)$(BASHCOMPDIR)" && install -m 0644 -v completion/$(APPNAME).bash-completion "$(DESTDIR)$(BASHCOMPDIR)/$(APPNAME)"
