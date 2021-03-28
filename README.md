@@ -22,7 +22,7 @@ The script depends on [GnuPG](https://gnupg.org/) for encryption.
 
 ## Installation
 
-Get the latest release, change into the directory, and run:
+Get the [latest release](https://github.com/climech/tfw/releases), change into the directory, and run:
 
 ```
 $ make && sudo make install
