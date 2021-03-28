@@ -409,11 +409,16 @@ cmd_edit() {
 
 cmd_list() {
 	load_entries
+
 	local selectors
 	[[ "$#" -gt 0 ]] && selectors=("$@") || selectors=(":")
 	sel "${selectors[@]}"
 
-	local maxlen=$(( ${#SELECTION[$(( ${#SELECTION[@]} - 1 ))]} + 2 ))
+	local maxlen=0
+	if [[ ${#SELECTION[@]} -gt 0 ]]; then
+		maxlen=$(( ${#SELECTION[$(( ${#SELECTION[@]} - 1 ))]} + 2 ))
+	fi
+
 	for i in "${SELECTION[@]}"; do
 		printf_cyan "$(printf "%-${maxlen}s " "$(($i+1)).")"
 		printf "${DATES[$i]} "
