@@ -1,5 +1,5 @@
 APPNAME = tfw
-VERSION = $(shell git describe --long --always --dirty 2>/dev/null || echo -n 'v0.1.0')
+VERSION = $(shell git describe --long --always --dirty 2>/dev/null || echo -n 'v0.1.1')
 PREFIX ?= /usr
 BINDIR ?= $(PREFIX)/bin
 BASHCOMPDIR ?= $(PREFIX)/share/bash-completion/completions
