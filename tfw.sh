@@ -13,8 +13,11 @@ GPG_OPTS=( $GESTALT_GPG_OPTS "--quiet" "--yes" "--compress-algo=none" "--no-encr
 # Check which variant of `date` is present on the system.
 date --version >/dev/null 2>&1 && DATE_VARIANT="GNU" || DATE_VARIANT="BSD"
 
-CONFIG_DIR="$HOME/.config/$APP_NAME"
-ENTRY_DIR="$CONFIG_DIR/entries"
+# Check if XDG_DATA_HOME exists
+[ -z "$XDG_DATA_HOME" ] && XDG_DATA_HOME="$HOME/.local/share"
+
+CONFIG_DIR="${XDG_DATA_HOME}/$APP_NAME"
+ENTRY_DIR="${XDG_DATA_HOME}/$APP_NAME/entries"
 DATE_FORMAT="%c"
 
 #
