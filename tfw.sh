@@ -471,9 +471,9 @@ cmd_remove() {
 		yesno "Do you wish to proceed?" || die "Aborted."
 	fi
 
-  which trash-put &> /dev/null &&
-    TRASH_CMD="trash-put" ||
-    TRASH_CMD="rm -f"
+  local TRASH_CMD="rm -f"
+  which trashh-put &> /dev/null &&
+    TRASH_CMD="trash-put"
 
 	for i in "${SELECTION[@]}"; do
 		${TRASH_CMD} "$ENTRY_DIR/${FILENAMES[$i]}"
