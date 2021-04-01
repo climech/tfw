@@ -451,8 +451,8 @@ cmd_view() {
 	printf "$text" | fold -w $width -s | less -R +1g
 }
 
-# cmd_remove() permanently deletes selected entries. Prompts for confirmation
-# when multiple entries are selected.
+# cmd_remove() uses trash-cli if found otherwise permanently deletes selected entries.
+# Prompts for confirmation when multiple entries are selected.
 cmd_remove() {
 	[[ "$#" -eq 0 ]] && die "Usage: $APP_NAME remove|rm <selector>..."
 
@@ -471,8 +471,12 @@ cmd_remove() {
 		yesno "Do you wish to proceed?" || die "Aborted."
 	fi
 
+  which trash-put &> /dev/null &&
+    TRASH_CMD="trash-put" ||
+    TRASH_CMD="rm -f"
+
 	for i in "${SELECTION[@]}"; do
-		rm -f "$ENTRY_DIR/${FILENAMES[$i]}"
+		${TRASH_CMD} "$ENTRY_DIR/${FILENAMES[$i]}"
 	done
 }
 
