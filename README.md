@@ -150,7 +150,7 @@ ante elementum [dolor], quis faucibus tortor risus vel sem. Aliquam varius
 
 #### remove|rm \<selector\>...
 
-Remove the selected entries. Prompt for confirmation when attempting to remove multiple entries.
+Remove the selected entries. Uses [trash-cli](https://github.com/andreafrancia/trash-cli/) if installed, otherwise permanently deletes the file. Prompts for confirmation when attempting to remove multiple entries.
 
 **NOTE:** The indices are not IDs. When an entry is removed from the list, the entry immediately following it takes its place. When in doubt, run `ls` again before removing more entries.
 
