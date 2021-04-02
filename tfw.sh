@@ -472,7 +472,7 @@ cmd_remove() {
 	fi
 
   local TRASH_CMD="rm -f"
-  which trashh-put &> /dev/null &&
+  which trash-put &> /dev/null &&
     TRASH_CMD="trash-put"
 
 	for i in "${SELECTION[@]}"; do
